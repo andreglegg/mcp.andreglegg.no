@@ -1,0 +1,7 @@
+# Copied to %USERPROFILE%\.cloudflared\config.yml on the box.
+# tunnel: and credentials-file: are filled in once the tunnel exists
+# (cloudflared tunnel create mcp-andreglegg).
+ingress:
+  - hostname: mcp.andreglegg.no
+    service: http://127.0.0.1:8787
+  - service: http_status:404
