@@ -40,4 +40,22 @@ endpoint is only up when that box is up.**
 
 ## Deploy
 
+Redeploy after a push:
+
     ssh <host> "powershell -File %USERPROFILE%\\mcp.andreglegg.no\\update.ps1"
+
+First-time setup on a fresh box:
+
+    git clone https://github.com/andreglegg/mcp.andreglegg.no.git %USERPROFILE%\mcp.andreglegg.no
+    cd %USERPROFILE%\mcp.andreglegg.no
+    npm ci --omit=dev
+    powershell -File install.ps1
+
+Then the tunnel (`cloudflared tunnel login` needs a browser and cannot be
+scripted):
+
+    cloudflared.exe tunnel login
+    cloudflared.exe tunnel create mcp-andreglegg
+    cloudflared.exe tunnel route dns mcp-andreglegg mcp.andreglegg.no
+    copy tunnel\config.yml %USERPROFILE%\.cloudflared\config.yml   # add the tunnel UUID first
+    cloudflared.exe service install
