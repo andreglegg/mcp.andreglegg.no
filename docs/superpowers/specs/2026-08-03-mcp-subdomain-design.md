@@ -26,12 +26,11 @@ and SSE. Pages cannot do it, so this subdomain needs real compute.
 
 ### Available hardware
 
-An always-on Windows box on the LAN, reachable at `<user>@<host>`:
+An always-on Windows machine on the LAN, reachable over SSH. What mattered for this
+design:
 
-- Windows 10.0.26200.8875
-- Python 3.11.9
-- Ollama running as a service
-- `%USERPROFILE%\cloudflared.exe` — **already downloaded, never logged in, zero tunnels configured**
+- Recent Windows, with Node and Python already installed
+- `cloudflared` already present but never logged in, with zero tunnels configured
 
 ### Why not Cloudflare Workers
 
