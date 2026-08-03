@@ -100,3 +100,23 @@ test('assetcut route is a real mcp endpoint with only ping in v1', async (t) => 
   const result = await client.callTool({ name: 'ping', arguments: {} });
   assert.equal(JSON.parse(result.content[0].text).route, 'assetcut');
 });
+
+test('cors is granted to the tools origin and withheld from others', async (t) => {
+  const { base } = await serve(t);
+
+  const allowed = await fetch(`${base}/healthz`, { headers: { Origin: 'https://tools.andreglegg.no' } });
+  assert.equal(allowed.headers.get('access-control-allow-origin'), 'https://tools.andreglegg.no');
+
+  const denied = await fetch(`${base}/healthz`, { headers: { Origin: 'https://evil.example' } });
+  assert.equal(denied.headers.get('access-control-allow-origin'), null);
+});
+
+test('cors preflight on the mcp route is answered', async (t) => {
+  const { base } = await serve(t);
+  const res = await fetch(`${base}/treegen`, {
+    method: 'OPTIONS',
+    headers: { Origin: 'https://tools.andreglegg.no', 'Access-Control-Request-Method': 'POST' },
+  });
+  assert.equal(res.status, 204);
+  assert.match(res.headers.get('access-control-allow-methods'), /POST/);
+});

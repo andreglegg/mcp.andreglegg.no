@@ -8,9 +8,30 @@ import { ROUTES, buildMcpServer } from './registry.js';
 
 const ARTIFACT_ID = /^([a-f0-9]{32})\.[a-z0-9]+$/;
 
+// The showcase site at tools.andreglegg.no is a browser origin, so it needs
+// CORS to read /healthz and to make live MCP calls. Deliberately an allowlist:
+// this is not a public API and `*` would let any page drive the server.
+const ALLOWED_ORIGINS = new Set([
+  'https://tools.andreglegg.no',
+  'http://localhost:5173',
+]);
+
 export function createApp({ store }) {
   const app = express();
   app.disable('x-powered-by');
+
+  app.use((req, res, next) => {
+    const origin = req.headers.origin;
+    if (origin && ALLOWED_ORIGINS.has(origin)) {
+      res.setHeader('Access-Control-Allow-Origin', origin);
+      res.setHeader('Vary', 'Origin');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Accept, Mcp-Session-Id, Mcp-Protocol-Version');
+      res.setHeader('Access-Control-Expose-Headers', 'Mcp-Session-Id');
+      res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
+      if (req.method === 'OPTIONS') return res.sendStatus(204);
+    }
+    next();
+  });
 
   app.get('/healthz', (_req, res) => res.json({ status: 'ok', routes: Object.keys(ROUTES) }));
 

@@ -1,10 +1,13 @@
-// Remote-facing treegen tools. The local server (~/Apps/treegen/mcp/server.js)
-// writes GLB files to disk and returns paths; a path means nothing to a remote
-// caller, and a 664KB GLB inlined as base64 would flood the model's context.
-// So every artifact goes to the store and the caller gets a short-lived URL.
+// Remote-facing treegen tools. treegen's own MCP server writes GLB files to
+// disk and returns paths; a path means nothing to a remote caller, and a 664KB
+// GLB inlined as base64 would flood the model's context. So every artifact
+// goes to the store and the caller gets a short-lived URL.
+//
+// The geometry itself comes from the treegen package (github:andreglegg/treegen)
+// rather than a vendored copy — copies drift.
 import { z } from 'zod';
-import { buildTree, meshStats, presets, randomParams } from './generator.js';
-import { exportGlb, exportObj } from './export.js';
+import { buildTree, meshStats, presets, randomParams } from 'treegen/generator';
+import { exportGlb, exportObj } from 'treegen/export';
 
 const SPECIES = ['round', 'oak', 'acacia', 'willow', 'pine'];
 const LEAF_STYLES = ['clustered', 'angular', 'rounded', 'flat', 'needles'];
