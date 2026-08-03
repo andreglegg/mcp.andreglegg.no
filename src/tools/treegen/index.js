@@ -45,7 +45,7 @@ export function registerTreegenTools(server, { store }) {
     let bytes;
     if (format === 'json') bytes = Buffer.from(JSON.stringify(settings, null, 2), 'utf8');
     else if (format === 'obj') bytes = Buffer.from(exportObj(group), 'utf8');
-    else bytes = await exportGlb(group);
+    else bytes = Buffer.from(await exportGlb(group)); // exportGlb yields an ArrayBuffer
 
     const artifact = await store.put(bytes, format);
     return {
