@@ -13,7 +13,8 @@ const ARTIFACT_ID = /^([a-f0-9]{32})\.[a-z0-9]+$/;
 // this is not a public API and `*` would let any page drive the server.
 const ALLOWED_ORIGINS = new Set([
   'https://tools.andreglegg.no',
-  'http://localhost:5173',
+  'http://localhost:5173', // vite dev
+  'http://localhost:4173', // vite preview
 ]);
 
 export function createApp({ store }) {
