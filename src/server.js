@@ -1,5 +1,7 @@
 import express from 'express';
 import { createReadStream } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import path from 'node:path';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { createArtifactStore } from './artifacts.js';
 import { ROUTES, buildMcpServer } from './registry.js';
@@ -53,10 +55,16 @@ export function createApp({ store }) {
 }
 
 // Entry point — only runs when executed directly, not when imported by tests.
-if (import.meta.url === `file://${process.argv[1]}`) {
+// Compare real filesystem paths: on Windows import.meta.url is
+// file:///C:/... while argv[1] is C:\..., so a string compare never matches
+// and the server would silently start nothing.
+const thisFile = fileURLToPath(import.meta.url);
+const isEntryPoint = process.argv[1] && path.resolve(process.argv[1]) === thisFile;
+
+if (isEntryPoint) {
   const port = Number(process.env.PORT ?? 8787);
   const store = createArtifactStore({
-    dir: process.env.ARTIFACT_DIR ?? new URL('../tmp/artifacts', import.meta.url).pathname,
+    dir: process.env.ARTIFACT_DIR ?? path.join(path.dirname(thisFile), '..', 'tmp', 'artifacts'),
     baseUrl: process.env.PUBLIC_BASE_URL ?? 'https://mcp.andreglegg.no',
   });
 
