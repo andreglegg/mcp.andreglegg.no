@@ -51,11 +51,19 @@ First-time setup on a fresh box:
     npm ci --omit=dev
     powershell -File install.ps1
 
-Then the tunnel (`cloudflared tunnel login` needs a browser and cannot be
-scripted):
+Then the tunnel. `cloudflared tunnel login` needs a browser and cannot be
+scripted; it can be run on any machine, and the resulting credentials JSON
+copied to the box:
 
-    cloudflared.exe tunnel login
-    cloudflared.exe tunnel create mcp-andreglegg
-    cloudflared.exe tunnel route dns mcp-andreglegg mcp.andreglegg.no
-    copy tunnel\config.yml %USERPROFILE%\.cloudflared\config.yml   # add the tunnel UUID first
-    cloudflared.exe service install
+    cloudflared tunnel login                                    # writes cert.pem
+    cloudflared tunnel create mcp-andreglegg                     # writes <UUID>.json
+    cloudflared tunnel route dns mcp-andreglegg mcp.andreglegg.no
+    # copy <UUID>.json and tunnel/config.yml to %USERPROFILE%\.cloudflared\ on the box
+    powershell -File install-tunnel.ps1
+
+**Do not use `cloudflared service install`.** On Windows it registers the
+service with no arguments (`Cloudflared service arguments: [cloudflared.exe]`)
+and drops the `--config` flag, so the service runs as LocalSystem, finds no
+config, and sits there connecting to nothing while reporting RUNNING. Copying
+the config into the LocalSystem profile does not fix it either. The scheduled
+task in `install-tunnel.ps1` pins the full command line and works.
