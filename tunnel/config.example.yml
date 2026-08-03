@@ -1,0 +1,11 @@
+# Copy to the cloudflared config directory on the host machine as config.yml
+# and fill in the tunnel UUID from `cloudflared tunnel create`.
+#
+# The credentials JSON is a secret and must never be committed.
+tunnel: <TUNNEL-UUID>
+credentials-file: <PATH-TO>/.cloudflared/<TUNNEL-UUID>.json
+
+ingress:
+  - hostname: mcp.andreglegg.no
+    service: http://127.0.0.1:8787
+  - service: http_status:404

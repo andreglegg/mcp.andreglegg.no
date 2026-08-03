@@ -23,14 +23,16 @@ window.
     npm test
     PUBLIC_BASE_URL=http://localhost:8787 npm start
 
+Environment: `PORT` (default 8787), `ARTIFACT_DIR`, `PUBLIC_BASE_URL`.
+
 ## Architecture
 
 Design and rationale — including why Cloudflare Workers was rejected and why
 binaries are never returned inline — live in
 `docs/superpowers/specs/2026-08-03-mcp-subdomain-design.md`.
 
-Runs on an always-on Windows box behind a free Cloudflare Tunnel. **The public
-endpoint is only up when that box is up.**
+The host runs on a self-hosted Windows machine behind a free Cloudflare Tunnel,
+so the public endpoint is only up when that machine is.
 
 ## Adding a tool
 
@@ -38,32 +40,42 @@ endpoint is only up when that box is up.**
 2. Add it to the route's array in `src/registry.js`. That's the only file that changes.
 3. Return `store.put(bytes, ext)`'s URL — never raw bytes.
 
-## Deploy
+## Deploying to a host machine
 
-Redeploy after a push:
+The scripts take paths as parameters and default to the current user's profile,
+so nothing here is tied to a particular machine.
 
-    ssh <host> "powershell -File %USERPROFILE%\\mcp.andreglegg.no\\update.ps1"
+**First-time setup**, from the checkout directory:
 
-First-time setup on a fresh box:
-
-    git clone https://github.com/andreglegg/mcp.andreglegg.no.git %USERPROFILE%\mcp.andreglegg.no
-    cd %USERPROFILE%\mcp.andreglegg.no
     npm ci --omit=dev
     powershell -File install.ps1
 
-Then the tunnel. `cloudflared tunnel login` needs a browser and cannot be
-scripted; it can be run on any machine, and the resulting credentials JSON
-copied to the box:
+`install.ps1` registers `mcp-host` as a Scheduled Task at boot. The Node path is
+absolute inside it because the task runs as SYSTEM, whose PATH excludes the
+Node install directory; a bare `node` there fails with `0x80070002` while the
+task still reports Ready and nothing listens.
+
+**The tunnel.** `cloudflared tunnel login` needs a browser and cannot be
+scripted. It can run on any machine, with the resulting credentials JSON copied
+to the host:
 
     cloudflared tunnel login                                    # writes cert.pem
-    cloudflared tunnel create mcp-andreglegg                     # writes <UUID>.json
-    cloudflared tunnel route dns mcp-andreglegg mcp.andreglegg.no
-    # copy <UUID>.json and tunnel/config.yml to %USERPROFILE%\.cloudflared\ on the box
+    cloudflared tunnel create <tunnel-name>                     # writes <UUID>.json
+    cloudflared tunnel route dns <tunnel-name> mcp.andreglegg.no
+
+Then on the host machine, copy `<UUID>.json` into the cloudflared directory,
+copy `tunnel/config.example.yml` to `config.yml` there and fill in the tunnel
+UUID, and run:
+
     powershell -File install-tunnel.ps1
 
 **Do not use `cloudflared service install`.** On Windows it registers the
-service with no arguments (`Cloudflared service arguments: [cloudflared.exe]`)
-and drops the `--config` flag, so the service runs as LocalSystem, finds no
-config, and sits there connecting to nothing while reporting RUNNING. Copying
-the config into the LocalSystem profile does not fix it either. The scheduled
-task in `install-tunnel.ps1` pins the full command line and works.
+service with no arguments and drops the `--config` flag, so the service runs as
+LocalSystem, finds no config, and sits there connecting to nothing while
+reporting RUNNING. Copying the config into the LocalSystem profile does not fix
+it either. The scheduled task in `install-tunnel.ps1` pins the full command line
+and works.
+
+**Redeploying** after a push — run `update.ps1` on the host machine:
+
+    powershell -File update.ps1
