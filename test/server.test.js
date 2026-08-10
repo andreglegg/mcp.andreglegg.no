@@ -38,12 +38,15 @@ test('healthz reports ok', async (t) => {
   assert.equal((await res.json()).status, 'ok');
 });
 
-test('treegen route lists its three tools over streamable http', async (t) => {
+test('treegen route lists its five tools over streamable http', async (t) => {
   const { base } = await serve(t);
   const client = await connect(t, base, 'treegen');
 
   const { tools } = await client.listTools();
-  assert.deepEqual(tools.map((x) => x.name).sort(), ['generate_tree', 'list_presets', 'random_tree']);
+  assert.deepEqual(
+    tools.map((x) => x.name).sort(),
+    ['export_forest', 'export_game_tree', 'generate_tree', 'list_presets', 'random_tree']
+  );
 });
 
 test('generate_tree over the wire produces a downloadable glb', async (t) => {
