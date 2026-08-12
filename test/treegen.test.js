@@ -73,13 +73,15 @@ test('random_tree rolls params and returns them alongside the url', async () => 
   assert.deepEqual(again.rolledParams, payload.rolledParams);
 });
 
-test('list_presets returns the built-in presets', async () => {
+test('list_presets returns every preset the generator ships', async () => {
   const { tools } = await harness();
   const payload = JSON.parse((await tools.list_presets({})).content[0].text);
-  assert.deepEqual(Object.keys(payload).sort(), [
-    'acacia', 'ancient', 'baobab', 'birch', 'giant', 'meadow', 'oak', 'orchard',
-    'palm', 'pine', 'poplar', 'sapling', 'snag', 'willow',
-  ]);
+  // Compared against treegen itself, not a copy of the list: the point of this
+  // tool is that it exposes whatever the generator currently has, and a
+  // hardcoded expectation only ever means a chore after a treegen bump.
+  const { presets } = await import('treegen/generator');
+  assert.deepEqual(Object.keys(payload).sort(), Object.keys(presets).sort());
+  assert.ok(Object.keys(payload).length >= 14, 'suspiciously few presets');
 });
 
 test('export_game_tree returns a URL to a GLB with LOD nodes', async () => {
